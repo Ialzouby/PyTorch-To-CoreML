@@ -3,23 +3,17 @@
 ## 📝 Overview
 This document highlights the modifications made to integrate the Wav2Lip model into an iOS application using CoreML, with the conversion from PyTorch handled through ONNX.
 
----
-
 ## 🔄 Changes Made
+### Model Conversion from PyTorch to CoreML
+The following changes were made to convert the Wav2Lip PyTorch model into CoreML format:
 
-### 1. Model Conversion from PyTorch to CoreML
-- **Added Scripts for Model Conversion**:
-  - **`export.py`**: Script to export the Wav2Lip PyTorch model to ONNX format.
-  - **`coremlconversion.py`**: Script to convert the ONNX model to CoreML format.
-
----
-
-### 📂 `export.py`
 ```python
 import torch
 from models.wav2lip import Wav2Lip
+import onnx
+from onnx_coreml import convert
 
-# Initialize and load your model
+# Step 1: Export PyTorch Model to ONNX
 model = Wav2Lip()
 checkpoint = torch.load('/path/to/checkpoint.pth', map_location='cpu')
 if 'state_dict' in checkpoint:
@@ -35,3 +29,9 @@ dummy_face_input = torch.randn(1, 6, 96, 96)
 
 # Export the model to ONNX
 torch.onnx.export(model, (dummy_audio_input, dummy_face_input), 'wav2lip.onnx')
+
+# Step 2: Convert ONNX Model to CoreML
+onnx_model_path = '/path/to/wav2lip.onnx'
+onnx_model = onnx.load(onnx_model_path)
+coreml_model = convert(onnx_model)
+coreml_model.save('wav2lip.mlmodel')
