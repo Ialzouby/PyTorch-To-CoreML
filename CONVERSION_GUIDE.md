@@ -29,30 +29,27 @@ pip install torch
 Below is a Python code snippet to convert a PyTorch model to an ONNX format:
 
 ```python
-import torch
-import torch.onnx
 
-# Load your trained PyTorch model
-model = torch.load('model.pth')
-model.eval()
-
-# Input to the model
-dummy_input = torch.randn(1, 3, 224, 224)
-
-# Export the model to ONNX
-torch.onnx.export(
-    model,                      # model being run
-    dummy_input,                # model input (or a tuple for multiple inputs)
-    "model.onnx",              # where to save the model
-    export_params=True,         # store the trained parameter weights inside the model file
-    opset_version=11,           # the ONNX version to export the model to
-    do_constant_folding=True,   # whether to execute constant folding for optimization
-    input_names=['input'],      # the model's input names
-    output_names=['output'],    # the model's output names
-    dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}} # variable length axes
-)
-
-print("Model successfully converted to ONNX!")
+        import torch
+        from models.wav2lip import Wav2Lip
+        
+        # Initialize and load your model
+        model = Wav2Lip()
+        checkpoint = torch.load('/path/to/checkpoint.pth', map_location='cpu')
+        if 'state_dict' in checkpoint:
+            state_dict = checkpoint['state_dict']
+            model.load_state_dict(state_dict)
+        else:
+            model.load_state_dict(checkpoint)
+        model.eval()
+        
+        # Create dummy inputs
+        dummy_audio_input = torch.randn(1, 1, 80, 16)
+        dummy_face_input = torch.randn(1, 6, 96, 96)
+        
+        # Export the model to ONNX
+        torch.onnx.export(model, (dummy_audio_input, dummy_face_input), 'wav2lip.onnx')
+                    
 ```
 
 ### 2. Converting TensorFlow to ONNX
