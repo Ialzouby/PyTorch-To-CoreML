@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Converting PyTorch Model to CoreML Using ONNX</title>
-</head>
+
 <body>
     <h1>Converting PyTorch Model to CoreML Using ONNX</h1>
 
