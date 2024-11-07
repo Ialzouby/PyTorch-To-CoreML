@@ -1,95 +1,77 @@
-# Model Conversion Documentation
+## Converting PyTorch Model to CoreML Using ONNX
 
-This documentation provides an overview of the process and code for converting models between various formats. The instructions are intended to help users with a step-by-step guide for converting machine learning models to different formats using appropriate tools and scripts.
-
-## Introduction
-
-Converting models between different formats is essential for deploying them across different platforms and frameworks. This guide outlines methods to convert models while retaining accuracy and compatibility.
-
-## Tools Required
-
-- **ONNX**: Open Neural Network Exchange is a format used to represent deep learning models. It allows interoperability between different machine learning frameworks.
-- **TensorFlow**: An open-source platform for machine learning and deep learning.
-- **PyTorch**: An open-source machine learning library for Python.
+This section provides a detailed guide on converting a PyTorch model to CoreML format using ONNX. This conversion is useful for deploying machine learning models in iOS applications.
 
 ### Prerequisites
 
-Ensure you have Python installed along with the following libraries:
+Install Python, PyTorch, ONNX, and CoreMLTools. Use commands like:
 
 ```bash
-pip install onnx
-pip install tensorflow
-pip install torch
+pip install torch onnx coremltools
 ```
 
-## Conversion Examples
+Ensure you have the model file and weights for the PyTorch model you wish to convert.
 
-### 1. Converting PyTorch to ONNX
+### Step 1: Determine Model Input Requirements
 
-Below is a Python code snippet to convert a PyTorch model to an ONNX format:
+Understand the input shape and type required by your PyTorch model. This information is crucial for creating dummy inputs and for successful conversion.
+
+### Step 2: Export PyTorch Model to ONNX Format
+
+`export.py`
 
 ```python
+import torch
+from models.wav2lip import Wav2Lip
 
-        import torch
-        from models.wav2lip import Wav2Lip
-        
-        # Initialize and load your model
-        model = Wav2Lip()
-        checkpoint = torch.load('/path/to/checkpoint.pth', map_location='cpu')
-        if 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
-            model.load_state_dict(state_dict)
-        else:
-            model.load_state_dict(checkpoint)
-        model.eval()
-        
-        # Create dummy inputs
-        dummy_audio_input = torch.randn(1, 1, 80, 16)
-        dummy_face_input = torch.randn(1, 6, 96, 96)
-        
-        # Export the model to ONNX
-        torch.onnx.export(model, (dummy_audio_input, dummy_face_input), 'wav2lip.onnx')
-                    
+# Initialize and load your model
+model = Wav2Lip()
+checkpoint = torch.load('/path/to/checkpoint.pth', map_location='cpu')
+if 'state_dict' in checkpoint:
+    state_dict = checkpoint['state_dict']
+    model.load_state_dict(state_dict)
+else:
+    model.load_state_dict(checkpoint)
+model.eval()
+
+# Create dummy inputs
+dummy_audio_input = torch.randn(1, 1, 80, 16)
+dummy_face_input = torch.randn(1, 6, 96, 96)
+
+# Export the model to ONNX
+torch.onnx.export(model, (dummy_audio_input, dummy_face_input), 'wav2lip.onnx')
 ```
 
-### 2. Converting TensorFlow to ONNX
+Run `python export.py` in your command line to execute this script.
 
-To convert a TensorFlow model to ONNX format, use the `tf2onnx` library.
+### Step 3: Convert ONNX Model to CoreML Format
 
-```bash
-pip install tf2onnx
-```
-
-Use the following command to convert the model:
-
-```bash
-python -m tf2onnx.convert --saved-model path/to/saved_model --output model.onnx
-```
-
-### 3. ONNX to TensorFlow
-
-To convert an ONNX model to TensorFlow, use the `onnx-tf` library:
-
-```bash
-pip install onnx-tf
-```
-
-Python code to convert ONNX to TensorFlow:
+`coremlconversion.py`
 
 ```python
-from onnx_tf.backend import prepare
 import onnx
+from onnx_coreml import convert
+
+# Path to the ONNX model
+onnx_model_path = '/path/to/wav2lip.onnx'
 
 # Load the ONNX model
-onnx_model = onnx.load("model.onnx")
+onnx_model = onnx.load(onnx_model_path)
 
-# Convert ONNX model to TensorFlow
-tf_rep = prepare(onnx_model)
+# Convert ONNX to CoreML
+coreml_model = convert(onnx_model)
 
-# Export the TensorFlow model
-tf_rep.export_graph("model_tf")
+# Save the CoreML model
+coreml_model.save('wav2lip.mlmodel')
 ```
 
-## Conclusion
+Run `python coremlconversion.py` to perform the conversion.
 
-This documentation outlines the process for converting models between popular machine learning formats. By following the steps, you can facilitate interoperability across different frameworks and improve deployment capabilities.
+### Additional Notes
+
+- Review the generated CoreML model to ensure it has the correct input and output layers as expected.
+- Test the CoreML model in a development environment before deploying it in a production application.
+
+### Summary
+
+This guide covers the conversion of a PyTorch model to CoreML using ONNX, which facilitates the deployment of machine learning models in iOS applications.
